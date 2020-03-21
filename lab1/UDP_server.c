@@ -41,9 +41,8 @@ int main(int argc, char *argv){
 	sockfd = socket(PF_INET, SOCK_DGRAM, 0);
 	if(sockfd < 0) err(2, "socket error\n");
 
-	struct sockaddr_in udp_addr;
+	struct sockaddr_in udp_addr = { 0 };
 
-	memset(&udp_addr, 0, sizeof(udp_addr));
 	udp_addr.sin_family = AF_INET;
 	udp_addr.sin_port = htons(port);
 	udp_addr.sin_addr.s_addr = INADDR_ANY;
