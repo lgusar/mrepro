@@ -3,20 +3,20 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <errno.h>
 #include <string.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <getopt.h>
+#include <err.h>
 
 void usage(){
 	err(1, "./UDP_server [-l port] [-p payload]\n");
 }
 
-int main(int argc, char *argv){
-
-	char payload[512] = "";
-	int port = 1234;
+int main(int argc, char **argv){
+	
+	char payload[512] = ""; //default value
+	int port = 1234; //default value
 	char recv_message[512];
 
 	char ch;
@@ -27,34 +27,32 @@ int main(int argc, char *argv){
 				port = atoi(optarg);
 				break;
 			case 'p':
-				payload = optarg;
+				strcpy(payload, optarg);
 				break;
 			default:
 				err(1, "unknown option %c\n", ch);
 		}
 	}
 
-	return 0;
-
 	int sockfd;
 
 	sockfd = socket(PF_INET, SOCK_DGRAM, 0);
 	if(sockfd < 0) err(2, "socket error\n");
 
-	struct sockaddr_in udp_addr = { 0 };
+	struct sockaddr_in udp_addr;
 
+	memset(&udp_addr, 0, sizeof(udp_addr));
 	udp_addr.sin_family = AF_INET;
 	udp_addr.sin_port = htons(port);
 	udp_addr.sin_addr.s_addr = INADDR_ANY;
 
-	bind(mysock, (struct sockaddr *) udp_addr, sizeof(udp_addr));
-
-	return 0;
+	bind(sockfd, (struct sockaddr *) &udp_addr, sizeof(udp_addr));
 
 	struct sockaddr_in bot_addr;
-	socketlen_t = bot_len;
+	socklen_t bot_len;
 
 	while(1){
+		
 		bot_len = sizeof(bot_addr);
 
 		int bytes_recv = recvfrom(sockfd, recv_message, sizeof(recv_message), 0, (struct sockaddr *) &bot_addr, bot_len);

