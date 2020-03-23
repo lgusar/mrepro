@@ -55,9 +55,9 @@ int main(int argc, char **argv){
 		
 		bot_len = sizeof(bot_addr);
 
-		int bytes_recv = recvfrom(sockfd, recv_message, sizeof(recv_message), 0, (struct sockaddr *) &bot_addr, bot_len);
+		int bytes_recv = recvfrom(sockfd, &recv_message, 512, 0, (struct sockaddr *) &bot_addr, bot_len);
 		if(!(strncmp(recv_message, "HELLO\n", 6))){
-			int bytes_sent = sendto(sockfd, payload, sizeof(payload), 0, (struct sockaddr *) &bot_addr, bot_len);
+			int bytes_sent = sendto(sockfd, &payload, sizeof(payload), 0, (struct sockaddr *) &bot_addr, bot_len);
 		}
 	}
 
