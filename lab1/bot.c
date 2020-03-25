@@ -39,7 +39,7 @@ void reg(int sockfd, char *ip_address, char *port)
 
     struct sockaddr_in server = { 0 };
     server.sin_family = AF_INET;
-    server.sin_addr.s_addr = inet_aton(ip_address);
+    server.sin_addr.s_addr = INADDR_ANY; 
     server.sin_port = htons(atoi(port));
 
     sendto(sockfd, data, strlen(data), 0,  
@@ -77,7 +77,7 @@ void prog(int sockfd, struct msg *message, char *payload)
     char *udp_server_port = message->entry[0].port_number;
 
     struct addrinfo *udp_server;
-    struct addrinfo hints
+    struct addrinfo hints;
     hints.sin_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
 
