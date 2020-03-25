@@ -78,7 +78,7 @@ void prog(int sockfd, struct msg *message, char *payload)
 
     struct addrinfo *udp_server;
     struct addrinfo hints;
-    hints.sin_family = AF_INET;
+    hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
 
     getaddrinfo(udp_server_ip, udp_server_port, &hints, &udp_server);
