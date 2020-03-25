@@ -12,7 +12,7 @@ struct pairs
 struct msg
 {
     char command;
-    struct pairs entry[MAX_ENTRIES];
     int number_of_pairs;
+    struct pairs entry[MAX_ENTRIES];
 
 };
