@@ -50,9 +50,9 @@ void reg(int sockfd, char *ip_address, char *port)
 
 void parse_packet(struct msg *message, char *packet, int bytes_recv)
 {
-    int i = PORT_LEN * ADDR_LEN + 1;
+    int i = PORT_LEN + ADDR_LEN;
 
-    int counter = bytes_recv/i;
+    int counter = (bytes_recv - 1)/i;
 
     message->command = *packet++;    
 
@@ -75,18 +75,25 @@ void prog(int sockfd, struct msg *message, char *payload)
 
     char *udp_server_ip = message->entry[0].ip_address;
     char *udp_server_port = message->entry[0].port_number;
-
+	
     struct addrinfo *udp_server;
     struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
-
-    getaddrinfo(udp_server_ip, udp_server_port, &hints, &udp_server);
-
-    sendto(sockfd, data, strlen(data), 0,
-           udp_server->ai_addr, udp_server->ai_addrlen);
-
+    
+    int status = getaddrinfo(udp_server_ip, udp_server_port, &hints, &udp_server);
+    if(status != 0){
+		fprintf(stderr, "GAI error %s\n", gai_strerror(status));
+		exit(3);
+	}
+	
+    sendto(sockfd, data, strlen(data), 0, udp_server->ai_addr, udp_server->ai_addrlen);
+    
     recvfrom(sockfd, payload, BUFLEN, 0, NULL, NULL); 
+    
+    printf("%s\n", payload);
+
 }
 
 void run(int sockfd, struct msg *message, char *payload)
@@ -102,11 +109,17 @@ void run(int sockfd, struct msg *message, char *payload)
             hints.ai_family = AF_INET;
             hints.ai_socktype = SOCK_DGRAM;
 
-            getaddrinfo(message->entry[j].ip_address, message->entry[j].port_number, &hints, &res);
+            int status = getaddrinfo(message->entry[j].ip_address, message->entry[j].port_number, &hints, &res);
+            if(status != 0){
+				fprintf(stderr, "GAI error %s\n", gai_strerror(status));
+				exit(3);
+			}
 
             sendto(sockfd, payload, strlen(payload), 0,
                    res->ai_addr, res->ai_addrlen);
         }
+        
+        sleep(1);
     } 
 }
 
